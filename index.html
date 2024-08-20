@@ -19,6 +19,10 @@
       height: auto;
       margin-top: 20%; /* Move the logo down by 20% */
     }
+    .form-check .form-check-input:invalid + .form-check-label:after {
+      content: " *";
+      color: red;
+    }
   </style>
 </head>
 <body>
@@ -42,6 +46,7 @@
       action="https://script.google.com/macros/s/AKfycbzfYFJNjgQcOCDjIHe1hb1--nNAY8kEzPv4JwCsC1Aqdk2mAVIm0m35HU-yJQvQskl57Q/exec"
       name="contact-form"
       id="contactForm"
+      onsubmit="return validateForm()"
     >
       <div class="mb-3">
         <label for="name" class="form-label">ឈ្មោះ​ / ​姓名/ NAME</label>
@@ -73,7 +78,7 @@
         />
       </div>
       <div class="mb-3">
-        <label class="form-label">គ្រឿងបរិក្ខារ / 设施 /Facility</label>
+        <label class="form-label">គ្រឿងបរិក្ខារ / 设施 /Facility <span class="text-danger">*</span></label>
         <div class="form-check">
           <input
             type="checkbox"
@@ -162,6 +167,11 @@
       .addEventListener("submit", function (event) {
         event.preventDefault(); // Prevent default form submission
 
+        // Validate the form before submitting
+        if (!validateForm()) {
+          return;
+        }
+
         // Show the overlay and loading icon
         document.getElementById("overlay").style.display = "flex"; // Changed to flex for centering
         document.getElementById("loadingIcon").style.display = "block";
@@ -197,33 +207,44 @@
           });
       });
 
+    function validateForm() {
+      const checkboxes = document.querySelectorAll('input[name="facility_type[]"]');
+      let isChecked = false;
+      checkboxes.forEach((checkbox) => {
+        if (checkbox.checked) {
+          isChecked = true;
+        }
+      });
+      if (!isChecked) {
+        alert("Please select at least one facility type.");
+        return false;
+      }
+      return true;
+    }
+
     function sendTelegramMessage(formData) {
       const botToken = "7311469615:AAFDZHYwK9iMSBM0oESt-kxwcPKrjdsMaJQ"; // Your bot token
-      const chatId = "1261940892"; // Your channel's chat ID
-      const message = `New form submission:\n
+      const chatId = "1261940895"; // Your chat ID
+      const message = `New submission:\n
                         Name: ${formData.get("your-name")}\n
                         Gender: ${formData.get("gender")}\n
                         Unit Number: ${formData.get("unit_number")}\n
-                        Facility Types: ${formData.getAll("facility_type[]").join(", ")}\n
-                        Newsletter: ${formData.get("newsletter") ? "Subscribed" : "Not subscribed"}`;
+                        Facilities: ${formData.getAll("facility_type[]").join(", ")}\n`;
+
       const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
-      console.log("Sending message to Telegram:", url); // Log the URL
-
       fetch(url)
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.ok) {
-            console.log("Message sent to Telegram successfully.");
-          } else {
-            console.error("Failed to send message to Telegram:", data);
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to send message to Telegram.");
           }
         })
         .catch((error) => {
           console.error("Error sending message to Telegram:", error);
         });
+        
     }
-        // Function to handle the auto-slider
+            // Function to handle the auto-slider
     const slides = document.querySelector(".slides");
     let index = 0;
 
